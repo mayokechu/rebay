@@ -5,7 +5,14 @@ module Rebay
     
     #http://developer.ebay.com/DevZone/shopping/docs/CallRef/FindProducts.html
     def find_products(params)
-      raise ArgumentError unless params[:categoryId] or params[:productId] or params[:queryKeywords]
+      unless params[:categoryId] or params[:productId] or params[:queryKeywords] or ( params["ProductID.value"] and params["ProductID.type"] )
+        raise ArgumentError, "Please provide a valid query for a product"
+      end
+      
+      if product_id = params.delete(:productId)
+        params.merge("ProductID.value" => product_id, "ProductID.type" => "Reference") 
+      end
+      
       response = get_json_response(build_request_url('FindProducts', params))
       if response.response.has_key?('Product')
         response.results = response.response['Product']
